@@ -1,0 +1,28 @@
+{
+	"TOOLBAR":{
+		"Tennis":{
+			"events":["1v1 game","tournament","team game"],
+			"categories":["Men","Women"],
+			"database":"defaultELO.json",
+			"icon":"Tennis.png"
+		},
+		"Boxing":{
+			"events":["1v1 game","tournament"],
+			"categories":["Men","Women"],
+			"database":"defaultELO.json",
+			"icon":"Boxing.png"
+		},
+		"UFC":{
+			"events":["1v1 game","tournament"],
+			"categories":["Men","Women"],
+			"database":"defaultELO.json",
+			"icon":"UFC.png"
+		},
+		"F1":{
+			"events":["free for all game","team game"],
+			"categories":["Men","Women"],
+			"icon":"F1.png",
+			"database":"defaultMMR-FFA.json"
+		}
+	}
+}

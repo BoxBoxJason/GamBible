@@ -1,0 +1,3 @@
+# CHANGELOG GamBible
+
+## V1

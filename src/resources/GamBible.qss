@@ -1,0 +1,100 @@
+* {
+    padding: 0;
+    margin: 0;
+    font-family: 'Barlow';
+    color: #000000;
+}
+
+GamBible {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+        stop: 0 #1d4c8a,
+        stop: 0.4 #1d4c8a,
+        stop: 0.41 #ffffff);
+}
+
+
+QLabel#h1 {
+    font-size: 35pt;
+    font-weight: bold;
+}
+
+
+QLabel#h2 {
+    font-size: 25pt;
+    font-weight: bold;
+    color: grey;
+}
+
+QLabel#h3{
+    font-size: 16pt;
+    font-weight: bold;
+}
+
+
+QLabel#p {
+    font-size: 13pt;
+    font-weight: normal;
+}
+
+
+QLineEdit {
+    color: #000000;
+    border: 2px ridge #01204a;
+    padding: 5px 10px;
+}
+
+
+QPushButton#submit {
+    color: #ffffff;
+    border-radius: 10px;
+    border: 5px ridge #424954;
+    background-color: #0a2d5c;
+    padding: 5px 10px;
+    font-size: 13pt;
+    font-weight: bold;
+}
+
+
+QPushButton#submit:hover {
+    background-color: #6388ba;
+}
+
+
+QMenu::item, QMenuBar::item:selected {
+    background-color: #0a2d5c;
+    border: none;
+    padding: 1px 3px;
+    color: #ffffff;
+}
+
+
+QMenuBar {
+    background-color: #01204a;
+    color: #ffffff;
+}
+
+
+QMenu::item:selected {
+    background-color: #6388ba;
+    color: #ffffff;
+}
+
+
+QMenu::separator {
+    height: 5px;
+    background: qradialgradient(spread:pad, cx:0.5, cy:0.5, radius:0.5, fx:0.5, fy:0.5, stop:0 #aaaaaa, stop:1 #0a2d5c);
+}
+
+
+QScrollBar:vertical {
+    width: 0;
+}
+
+QScrollBar:horizontal {
+    height: 0;
+}
+
+QScrollArea{
+    background-color: #01204a;
+    border: 2px ridge #01204a;
+}
