@@ -4,7 +4,7 @@ Project : GamBible
 Package: interface
 Module:  WelcomePage
 Version: 2.0
-Usage: GamBible welcome page, does not provide any functionality appart from display
+Usage: GamBible welcome page, does not provide any functionality appart from display.
 
 Author: BoxBoxJason
 Date: 07/10/2023
@@ -15,9 +15,14 @@ from resources.PathEnum import getImage
 
 class WelcomePage(TemplatePageWidget):
     """
-    Collector Welcome page
+    GamBible Welcome page.
     """
     def __init__(self,parent):
+        """
+        Constructor for WelcomePage.
+        
+        :param QWidget parent: Parent widget.
+        """
         super().__init__(parent)
 
         img = QPixmap(getImage('GamBible.png'))

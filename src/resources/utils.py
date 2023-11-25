@@ -12,9 +12,11 @@ Date: 01/10/2023
 
 def getRankFromELO(ELO):
     """
-    @param (float or int) ELO : player ELO
-    
-    @return (str) rank : rank corresponding to ELO
+    Returns rank associated with ELO value.
+
+    :param float ELO : Player ELO.
+
+    :return: str - Rank corresponding to given ELO.
     """
     rank = ""
     if ELO == 'ELO':
@@ -37,9 +39,16 @@ def getRankFromELO(ELO):
 
 
 def findZero(f):
+    """
+    Implementation of the dichotomy algorithm, searches from values from 0 to 10000.
+
+    :param function f: R -> R function to evaluate.
+
+    :return: float - x value for which f(x) ~ 0.
+    """
     Δ = 1
     ε = 1e-5
-    a = -1e4
+    a = 0
     b = 1e4
     while Δ > ε:
         m = (a + b) / 2

@@ -4,7 +4,7 @@ Project : GamBible
 Package: Ranking
 Module:  ELO
 Version: 2.0
-Usage: Provides all ELO algorithm functionalities, allows for player ranking and games processing
+Usage: Provides all ELO algorithm functionalities, allows for player ranking and games processing.
 
 Author: BoxBoxJason
 Date: 01/10/2023
@@ -19,17 +19,17 @@ START_ELO = 1500
 
 def processGames(output_file_path,games_table,players_table,base_points,beginner_multiplier,low_elo_multiplier,commit=False):
     """
-    @brief Processes all unprocessed game in the database
+    Process all unprocessed games in the database.
 
-    @param (path) output_file_path : Absolute path to database output file
-    @param (dict[]) games_table : list of games
-    @param (dict) players_table : dict of players
-    @param (float) base_points : ELO algorithm base points
-    @param (float) beginner_multiplier : ELO algorithm beginner multiplier
-    @param (float) low_elo_multiplier : ELO algorithm low_elo_multiplier
-    @param (bool) commit : states if changes made should be commited to database or not
+    :param str output_file_path: Absolute path to the database output file.
+    :param list[dict] games_table: List of games.
+    :param dict players_table: Dictionary of players.
+    :param float base_points: ELO algorithm base points.
+    :param float beginner_multiplier: ELO algorithm beginner multiplier.
+    :param float low_elo_multiplier: ELO algorithm low_elo_multiplier.
+    :param bool commit: States if changes made should be committed to the database or not (default True).
 
-    @return (float) Correct game output predictions %
+    :return: float - Correct game output predictions percentage.
     """
 
     total_number_games = 0
@@ -54,9 +54,15 @@ def processGames(output_file_path,games_table,players_table,base_points,beginner
 
 def processGame(game_dict,players_table,base_points,beginner_multiplier,low_elo_multiplier):
     """
-    @brief Processes a game, updates the player ELO accordingly
+    Processes a game, updates the player ELO accordingly.
 
-    @param (Game row) game : Game exinsting row object
+    :param dict game_dict: Game table dict.
+    :param dict players_table: Database players table.
+    :param float base_points: ELO algorithm base points.
+    :param float beginner_multiplier: ELO algorithm beginner multiplier.
+    :param float low_elo_multiplier: ELO algorithm low elo multiplier.
+
+    :return: bool - ELO algorithm prediction was correct.
     """
     winner_dict = players_table[game_dict['WINNER_ID']]
     loser_dict = players_table[game_dict['LOSER_ID']]
@@ -97,12 +103,12 @@ def processGame(game_dict,players_table,base_points,beginner_multiplier,low_elo_
 
 def determineWinProbability(ELO1,ELO2):
     """
-    @brief Calculates the win factor for a game between two given ELO (ELO algorithm)
+    Calculates the win factor for a game between two given ELO (ELO algorithm).
 
-    @param (float) ELO1 : first player ELO
-    @param (float) ELO2 : second player ELO
+    :param float ELO1: First player ELO.
+    :param float ELO2: Second player ELO.
 
-    @return (float) Predicted win probability (for player 1)
+    :return: float - Predicted win probability (for player 1).
     """
     elo_diff = ELO1 - ELO2
     # Formula used to compute win probability for player 1
@@ -111,14 +117,14 @@ def determineWinProbability(ELO1,ELO2):
 
 def getPlayerGrowthCoeff(player_games_count,base_points,beginner_multiplier,low_elo_multiplier):
     """
-    @brief Returns a player's growth coeff based on the ELO algorithm
+    Returns a player's growth coeff based on the ELO algorithm.
 
-    @param (Player row) player : Player database row
-    @param (float) base_points : default player growth coeff (ELO algorithm)
-    @param (float) beginner_multiplier : beginner player growth coeff multiplier (ELO algorithm)
-    @param (float) low_elo_multiplier : multiplier for non beginner low elo players (ELO algorithm)
+    :param int players_games_count: number of games played by a player.
+    :param float base_points: ELO algorithm base points.
+    :param float beginner_multiplier: ELO algorithm beginner multiplier.
+    :param float low_elo_multiplier: ELO algorithm low elo multiplier.
 
-    @return (float) player's growth coefficient (ELO algorithm)
+    :return: float - Player's growth coefficient (ELO algorithm).
     """
     if player_games_count < 30: # Beginner
         K = base_points * beginner_multiplier
@@ -132,10 +138,10 @@ def getPlayerGrowthCoeff(player_games_count,base_points,beginner_multiplier,low_
 
 def optimizeGrowthCoeff(sport,category):
     """
-    @brief Hyperparemeter optimization algorithm, tests a large number of configurations and logs the succes rate into database
+    Hyperparemeter optimization algorithm, tests a large number of configurations and logs the succes rate into database.
 
-    @param (str) sport : sport name (must correspond to existing folder)
-    @param (str) category : category name (must correspond to existing folder)
+    :param str sport: Sport name (must correspond to existing folder).
+    :param str category: Category name (must correspond to existing folder).
     """
     logging.info('Starting ELO algorithm hyperparameter optimization')
 

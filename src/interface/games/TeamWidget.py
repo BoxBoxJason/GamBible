@@ -13,6 +13,13 @@ from interface.TemplateWidget import TemplatePageWidget
 
 
 class TeamWidget(TemplatePageWidget):
-
+    """
+    Team game outcome prediction widget.
+    """
     def __init__(self,parent):
+        """
+        Constructor for TeamWidget.
+
+        :param QWidget parent: Parent widget.
+        """
         super().__init__(parent)

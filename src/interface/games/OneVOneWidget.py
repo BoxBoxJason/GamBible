@@ -9,18 +9,27 @@ Usage: 1v1 game prediction widget, allows to pick two players and predict the ga
 Author: BoxBoxJason
 Date: 09/10/2023
 '''
-from json import load
 from PyQt6.QtWidgets import QWidget,QLabel,QPushButton,QVBoxLayout,QLineEdit,QCompleter
 from PyQt6.QtCore import Qt,QStringListModel
 from interface.TemplateWidget import TemplatePageWidget
+from resources.PathEnum import getJsonObject
 from ranking.ELO import determineWinProbability,processGames
 
 class OneVOneWidget(TemplatePageWidget):
     """
-    1v1 games widget,
-    Allows to pick players and predict the outcome of a game between them
+    1v1 game outcome prediction widget.
+
+    :ivar dict players_table: Database Players table.
+    :ivar PlayerWidget __player1_widget: Player 1 information collection display widget.
+    :ivar PlayerWidget __player2_widget: Player 2 information collection display widget.
+    :ivar QLabel __prediction_confidence_rate_qlabel: Label used to display prediction confidence rate.
     """
     def __init__(self,parent):
+        """
+        Constructor for OneVOneWidget
+
+        :param QWidget parent: Parent widget.
+        """
         super().__init__(parent)
         self.players_table = {}
         self.layout()
@@ -38,12 +47,11 @@ class OneVOneWidget(TemplatePageWidget):
 
     def setDatabase(self,database_path):
         """
-        Sets the widget database, changes the pickable players in corresponding widgets
+        Sets the widget database, changes the pickable players in corresponding widgets.
 
-        @param (path) database_path : Absolute path to database file
+        :param path database_path: Absolute path to database file.
         """
-        with open(database_path,'r',encoding='utf-8') as database_file:
-            database = load(database_file)
+        database = getJsonObject(database_path)
         games_table = database['GAMES']
         self.players_table = database['PLAYERS']
         processGames(database_path,games_table,self.players_table,28.163265306122447,3.33265306122449,1,True)
@@ -52,6 +60,9 @@ class OneVOneWidget(TemplatePageWidget):
 
 
     def __predictGameOutput(self):
+        """
+        Predicts the outcome of the game and displays prediction confidence rate
+        """
         player1_id = self.__player1_widget.search_bar.text()
         player2_id = self.__player2_widget.search_bar.text()
         if player1_id in self.players_table and player2_id in self.players_table:
@@ -76,12 +87,23 @@ CORRECT_INPUT_STYLE = "QLineEdit {background-color: #b3f5a4;border: 2px ridge #2
 
 class PlayerWidget(QWidget):
     """
-    Player picker widget
+    Player picker widget. Contains a search bar with auto complete. The search bar goes green if input is in database, else it goes red
+    Contains a victory rate display
+
+    :ivar QLineEdit search_bar: Player search bar, used to add players to game.
+    :ivar QCompleter completer: Search bar completer. Contains players ids in database.
+    :ivar QLabel player_winrate_qlabel: Player win probability display.
     """
     def __init__(self,parent,player_index):
+        """
+        Constructor for PlayerWidget.
+
+        :param QWidget parent: Parent widget.
+        :param int player_index: Player index (for head label display purposes).
+        """
         super().__init__(parent)
         layout = QVBoxLayout(self)
-        
+
         # Player title label
         title_qlabel = QLabel(f"Player {player_index}",self)
         title_qlabel.setObjectName('h3')
@@ -90,7 +112,7 @@ class PlayerWidget(QWidget):
         # Player search bar
         self.search_bar = QLineEdit(self)
         self.search_bar.setStyleSheet(CORRECT_INPUT_STYLE)
-        self.search_bar.textChanged.connect(self.__updateSuggestions)
+        self.search_bar.textChanged.connect(self.__updateBg)
         layout.addWidget(self.search_bar,0,Qt.AlignmentFlag.AlignHCenter)
 
         # Search bar completer
@@ -104,7 +126,12 @@ class PlayerWidget(QWidget):
         layout.addWidget(self.player_winrate_qlabel,0,Qt.AlignmentFlag.AlignHCenter)
 
 
-    def __updateSuggestions(self,text):
+    def __updateBg(self,text):
+        """
+        Updates search bar background color depending if the player is known in database or not.
+
+        :param str text: Text in the search bar.
+        """
         first_suitable_element = None
         for player_id in self.parent().players_table:
             if text in player_id:
@@ -126,4 +153,9 @@ class PlayerWidget(QWidget):
 
 
     def updatePlayersList(self, players_ids):
+        """
+        Updates players list in the completer.
+
+        :param list[str] players_ids: List of players ids.
+        """
         self.completer.setModel(QStringListModel(players_ids, self.completer))

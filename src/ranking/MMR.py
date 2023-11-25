@@ -24,14 +24,17 @@ START_DEVIATION = 350
 
 def processGames(output_file_path,games_table,players_table,γ=0.5,β=0.5,ρ=1,commit=False):
     """
-    Processes the entire history file and updates players dict with new games informations
-    @param (dict) games_table : Database games table
-    @param (dict) players_table : Database players_table
-    @param (float) γ : Temporal diffusion [0,inf[
-    @param (float) β : Performance deviation [0,inf[
-    @param (float) ρ : 1/ρ Inverse momentum -> player ranking volatility in case of sudden level change
-    @param (bool) commit : States if changes should be commited to database or not
+    Processes the entire history file and updates players dict with new games informations.
     
+    :param path output_file_path: Absolute path to database file.
+    :param dict games_table: Database games table.
+    :param dict players_table: Database players_table.
+    :param float γ: Temporal diffusion [0,inf[.
+    :param float β: Performance deviation [0,inf[.
+    :param float ρ: 1/ρ Inverse momentum -> player ranking volatility in case of sudden level change.
+    :param bool commit: States if changes should be commited to database or not.
+
+    :return: float - MMR algorithm prediction success rate
     """
     logging.info('Processing new games')
     games_ordered_ids = orderGamesTable(games_table)
@@ -47,15 +50,23 @@ def processGames(output_file_path,games_table,players_table,γ=0.5,β=0.5,ρ=1,c
         with open(output_file_path,'w',encoding='utf-8') as output_file:
             dump({'GAMES':games_table,'PLAYERS':players_table},output_file)
 
-    return predicted_output / total_processed_games
+    success_rate = 0
+    if total_processed_games != 0:
+        success_rate = predicted_output / total_processed_games
+    return success_rate
 
 
 def processGame(players_table,game_dict,γ,β,ρ):
     """
-    Updates all rankings according to game results
-    @param (dict) playersDict : {playerId:Player}
-    @param (str) gameId : unique game identifier
-    @param (list) gameResults : list of players ids ranked by performance [playerIds]
+    Updates all rankings according to game results.
+    
+    :param dict players_table: Database Players table.
+    :param str game_dict: Database Games table row.
+    :param float γ: Temporal diffusion [0,inf[.
+    :param float β: Performance deviation [0,inf[.
+    :param float ρ: 1/ρ Inverse momentum -> player ranking volatility in case of sudden level change.
+
+    :return: bool - Success of game outcome prediction by MMR algorithm
     """
     # Adding unknown players to playersDict
     ranking_skills = [players_table[player_id]['SKILL'] - 3 * players_table[player_id]['SKILL_DEVIATION'] for player_id in game_dict['RANKING']]
@@ -81,8 +92,11 @@ def processGame(players_table,game_dict,γ,β,ρ):
 
 def diffuse(player_dict,γ,ρ):
     """
-    Updates changes in player skill
-    @param (Player) player : player to update
+    Updates changes in player skill.
+
+    :param dict player_dict: Database Players row.
+    :param float γ: Temporal diffusion [0,inf[.
+    :param float ρ: 1/ρ Inverse momentum -> player ranking volatility in case of sudden level change.
     """
     ϰ = 1 / (1 + (γ / player_dict['SKILL_DEVIATION']) ** 2)
     wg = ϰ ** ρ * player_dict['PERF_WEIGHT'][0]
@@ -98,9 +112,11 @@ def diffuse(player_dict,γ,ρ):
 
 def update(players_ranking,selected_player_index,β):
     """
-    Updates the player average skill evaluation
-    @param (dict[]) players_ranking : list of player dicts, order corresponds to game outcome
-    @param (int) selectedPlayerIndex
+    Updates the player average skill evaluation.
+
+    :param list[dict] players_ranking: List of player dicts, order corresponds to game outcome.
+    :param int selected_player_index: Index (in players_ranking) of the player to update.
+    :param float β: Performance deviation [0,inf[.
     """
     p = getPerfEstimation(players_ranking, selected_player_index)
     players_ranking[selected_player_index]['PERF_HISTORY'].append(p)
@@ -113,8 +129,12 @@ def update(players_ranking,selected_player_index,β):
 
 def getAverageSkillEstimation(player_dict,β):
     """
-    Returns the (unique) zero of the player average skill
-    @return (float)
+    Returns updated player's average skill.
+
+    :param dict player_dict: Database Players table row.
+    :param float β: Performance deviation [0,inf[.
+
+    :return: float - Player updated average skill.
     """
     def estimationFunction(x):
         val = player_dict['PERF_WEIGHT'][0] * (x - player_dict['PERF_HISTORY'][0])
@@ -128,8 +148,12 @@ def getAverageSkillEstimation(player_dict,β):
 
 def getPerfEstimation(players_ranking,selected_player_index):
     """
-    Returns the (unique) 0 of the players average performance for a game
-    @return (float)
+    Returns updated player's average performance for a game.
+
+    :param list[dict] players_ranking: List of player dicts, order corresponds to game outcome.
+    :param int selected_player_index: Index (in players_ranking) of the player to update.
+
+    :return: float - Player's game performance estimation
     """
     def estimationFunction(x):
         val = 0
@@ -146,13 +170,13 @@ def getPerfEstimation(players_ranking,selected_player_index):
 
 def createGame(games_table,players_table,game_id,game_date,game_ranking):
     """
-    @brief Creates a new game dict in the games table
+    Creates a new game dict in the Games table.
 
-    @param (dict) games_table : Database games table
-    @param (dict) players_table : Database players table
-    @param (str) game_id : game (unique) id
-    @param (str) game_date : game date
-    @param (int[]) game_ranking : list of player ids ranked (winner is first, loser is last)
+    :param dict games_table: Database Games table.
+    :param dict players_table: Database Players table.
+    :param str game_id: Game (unique) id.
+    :param str game_date : Game date.
+    :param list[int] game_ranking: List of player ids ranked (winner is first, loser is last).
     """
     games_table[game_id] = {
     'ID':game_id,
@@ -167,10 +191,10 @@ def createGame(games_table,players_table,game_id,game_date,game_ranking):
 
 def optimizeHyperparameters(sport,category):
     """
-    @brief Hyperparemeter optimization algorithm, tests a large number of configurations and logs the succes rate into database
+    Hyperparemeter optimization algorithm, tests a large number of configurations and logs the succes rate into database.
 
-    @param (str) sport : sport name (must correspond to existing folder)
-    @param (str) category : category name (must correspond to existing folder)
+    :param str sport: Sport name (must correspond to existing folder).
+    :param str category: Category name (must correspond to existing folder).
     """
     logging.info('Starting MMR algorithm hyperparameters optimization')
 

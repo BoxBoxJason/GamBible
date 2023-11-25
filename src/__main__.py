@@ -4,7 +4,7 @@ Project : GamBible
 Package: 
 Module:  __main__
 Version: 2.0
-Usage: GamBible main module, adds fonts and creates 
+Usage: GamBible main module, adds fonts, creates GamBible window and runs the app.
 
 Author: BoxBoxJason
 Date: 01/10/2023

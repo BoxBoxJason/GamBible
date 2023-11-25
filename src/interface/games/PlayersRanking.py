@@ -16,18 +16,15 @@ from PyQt6.QtWidgets import QWidget,QScrollArea, QVBoxLayout, QHBoxLayout,\
 from PyQt6.QtCore import Qt
 from interface.TemplateWidget import TemplatePageWidget
 from resources.utils import getRankFromELO
+from resources.PathEnum import getJsonObject
 
 class PlayersRankingWidget(TemplatePageWidget):
     """
-    Players ranking widget
-    
-    Layout:
-    
-                TITLE
-              SUBTITLE
+    Displays the database players ranking.
 
-              SEARCH BAR
-            SCROLL WIDGET
+    :ivar dict __players_table: Database Players table.
+    :ivar dict __players_badges: Dictionary of ranking badge widget for each player {player_id:RankingBadge}.
+    :ivar QVBoxLayout __scroll_layout: Layout used for scrollable area.
     """
     def __init__(self,parent):
         super().__init__(parent)
@@ -55,18 +52,22 @@ class PlayersRankingWidget(TemplatePageWidget):
 
         # Scroll widget and layout
         scroll_widget = QWidget(self)
-        self.__scrollLayout = QVBoxLayout()
-        self.__scrollLayout.setContentsMargins(0,0,0,0)
-        self.__scrollLayout.setSpacing(0)
+        self.__scroll_layout = QVBoxLayout(scroll_widget)
+        self.__scroll_layout.setContentsMargins(0,0,0,0)
+        self.__scroll_layout.setSpacing(0)
 
-        scroll_widget.setLayout(self.__scrollLayout)
         scroll_area.setWidget(scroll_widget)
-        self.__scrollLayout.addWidget(RankingBadge(self,{'ELO':'ELO'},'RANK'),
+        self.__scroll_layout.addWidget(RankingBadge(self,{'ELO':'ELO'},'RANK'),
                                       1,Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignHCenter)
 
 
 
     def __filterPlayers(self,filter_txt):
+        """
+        Filters displayed players ranking badges.
+
+        :param str filter_txt: Text in the search bar.
+        """
         for player,player_badge in self.__players_badges.items():
             if filter_txt in player:
                 player_badge.setHidden(False)
@@ -74,14 +75,13 @@ class PlayersRankingWidget(TemplatePageWidget):
                 player_badge.setHidden(True)
 
 
-    def setDatabase(self,db_path):
+    def setDatabase(self,database_path):
         """
-        Clears previous displayed ranking and displays selected one
+        Sets the widget database, changes the pickable players in corresponding widgets.
 
-        @param (path) db_path : Absolute path to new db
+        :param path database_path: Absolute path to database file.
         """
-        with open(db_path,'r',encoding='utf-8') as database_file:
-            self.__players_table = load(database_file)['PLAYERS']
+        self.__players_table = getJsonObject(database_path)['PLAYERS']
 
         sorted_players = sorted(self.__players_table.values(),key=lambda x: x['ELO'],reverse=True)
 
@@ -89,7 +89,7 @@ class PlayersRankingWidget(TemplatePageWidget):
         for index,player_dict in enumerate(sorted_players):
             new_badge = RankingBadge(self,player_dict,index)
             self.__players_badges[player_dict['ID']] = new_badge
-            self.__scrollLayout.addWidget(new_badge,1,
+            self.__scroll_layout.addWidget(new_badge,1,
                                           Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignHCenter)
         logging.debug('Ranking badges done')
 
@@ -99,29 +99,22 @@ class PlayersRankingWidget(TemplatePageWidget):
         Cleans the widget from existing data
         """
         self.__players_table.clear()
-        while self.__scrollLayout.count() > 1:
-            self.__scrollLayout.itemAt(1).widget().setParent(None)
+        while self.__scroll_layout.count() > 1:
+            self.__scroll_layout.itemAt(1).widget().setParent(None)
 
 
 class RankingBadge(QWidget):
     """
-    Ranking widget ranking badge
-    LAYOUT:
-            PLAYER NAME        PLAYER ELO        PLAYER RANK
+    Ranking widget ranking badge. Used for user ranking display.
     """
-
-    __STYLESRANK = {
-        "DIVISION":"RankingBadge { background-color: rgb(100,100,100);}",
-        "BRONZE":"RankingBadge { background: qradialgradient(cx: 0.8, cy: 0.1, radius: 1, fx: 0.5, fy: 0.5, stop: 0 #efa678, stop: 0.4 #8c4d37, stop: 0.5 #603620, stop: 0.6 #b77b56, stop: 1 #603620); border-top: 1px solid #5a3320;}",
-        "SILVER":"RankingBadge { background: qradialgradient(cx: 0.8, cy: 0.1, radius: 1, fx: 0.5, fy: 0.5, stop: 0 #ededed, stop: 0.4 #b0b0b0, stop: 0.5 #727272, stop: 0.6 #999999, stop: 1 #727272); border-top: 1px solid #555555;}",
-        "GOLD":"RankingBadge { background: qradialgradient(cx: 0.8, cy: 0.1, radius: 1, fx: 0.5, fy: 0.5, stop: 0 #f5ec70, stop: 0.4 #a88e2a, stop: 0.5 #92741c, stop: 0.6 #a88e2a, stop: 1 #92741c); border-top: 1px solid #5e5010;}",
-        "PLATINUM":"RankingBadge { background: qradialgradient(cx: 0.8, cy: 0.1, radius: 1, fx: 0.5, fy: 0.5, stop: 0 #125c84, stop: 0.4 #E5E4E2, stop: 0.5 #58949c, stop: 0.6 #125384, stop: 1 #157bb3); border-top: 1px solid #0c3d57;}",
-        "DIAMOND":"RankingBadge { background: qradialgradient(cx: 0.8, cy: 0.1, radius: 1, fx: 0.5, fy: 0.5, stop: 0 #9bd4e1, stop: 0.4 #aae3f0, stop: 0.5 #b9f2ff, stop: 0.6 #aae3f0, stop: 1 #9bd4e1); border-top: 1px solid #9bd4e1;}",
-        "MASTER":"RankingBadge { background: qradialgradient(cx: 0.8, cy: 0.1, radius: 1, fx: 0.5, fy: 0.5, stop: 0 #fa71cd, stop: 0.4 #b256e8, stop: 0.5 #c471f5, stop: 0.6 #b256e8, stop: 1 #c471f5); border-top: 1px solid #a15dc9;}",
-        "GRANDMASTER":"RankingBadge { background: qradialgradient(cx: 0.8, cy: 0.1, radius: 1, fx: 0.5, fy: 0.5, stop: 0 #b54e4e, stop: 0.4 #db7f7f, stop: 0.5 #d3d3d3, stop: 0.6 #cf2525, stop: 1 #8f8989); border-top: 1px solid #5e5010;}"
-    }
-
     def __init__(self,parent,player_dict,index_player):
+        """
+        Constructor for RankingBadge.
+        
+        :param QWidget parent: Parent widget.
+        :param dict player_dict: Database Players table row.
+        :param int index_player: Global ranking of the player. (first is 0)
+        """
         super().__init__(parent)
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground,True)
         layout = QHBoxLayout()
@@ -141,7 +134,7 @@ class RankingBadge(QWidget):
 
         # Tier label
         division = getRankFromELO(player_dict.get('ELO'))
-        self.setStyleSheet(RankingBadge.__STYLESRANK[division])
+        self.setObjectName(division)
         tier_label = QLabel(division,self)
         tier_label.setFixedSize(100,22)
         layout.addWidget(tier_label,1,Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop)

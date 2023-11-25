@@ -55,8 +55,19 @@ QPushButton#submit {
 }
 
 
-QPushButton#submit:hover {
+QPushButton#submit:hover,QPushButton#submit-small:hover {
     background-color: #6388ba;
+}
+
+
+QPushButton#submit-small {
+    color: #ffffff;
+    border-radius: 6px;
+    border: 3px ridge #424954;
+    background-color: #0a2d5c;
+    padding: 1px 5px;
+    font-size: 13pt;
+    font-weight: bold;
 }
 
 
@@ -98,3 +109,19 @@ QScrollArea{
     background-color: #01204a;
     border: 2px ridge #01204a;
 }
+
+
+QListWidget {
+    border: 5px ridge #01204a;
+}
+
+
+RankingBadge#DIVISION {background-color: rgb(100,100,100);}
+RankingBadge#BRONZE {background: qradialgradient(cx: 0.8, cy: 0.1, radius: 1, fx: 0.5, fy: 0.5, stop: 0 #efa678, stop: 0.4 #8c4d37, stop: 0.5 #603620, stop: 0.6 #b77b56, stop: 1 #603620); border-top: 1px solid #5a3320;}
+RankingBadge#SILVER {background: qradialgradient(cx: 0.8, cy: 0.1, radius: 1, fx: 0.5, fy: 0.5, stop: 0 #ededed, stop: 0.4 #b0b0b0, stop: 0.5 #727272, stop: 0.6 #999999, stop: 1 #727272); border-top: 1px solid #555555;}
+RankingBadge#GOLD {background: qradialgradient(cx: 0.8, cy: 0.1, radius: 1, fx: 0.5, fy: 0.5, stop: 0 #f5ec70, stop: 0.4 #a88e2a, stop: 0.5 #92741c, stop: 0.6 #a88e2a, stop: 1 #92741c); border-top: 1px solid #5e5010;}
+RankingBadge#PLATINUM {background: qradialgradient(cx: 0.8, cy: 0.1, radius: 1, fx: 0.5, fy: 0.5, stop: 0 #125c84, stop: 0.4 #E5E4E2, stop: 0.5 #58949c, stop: 0.6 #125384, stop: 1 #157bb3); border-top: 1px solid #0c3d57;}
+RankingBadge#DIAMOND {background: qradialgradient(cx: 0.8, cy: 0.1, radius: 1, fx: 0.5, fy: 0.5, stop: 0 #9bd4e1, stop: 0.4 #aae3f0, stop: 0.5 #b9f2ff, stop: 0.6 #aae3f0, stop: 1 #9bd4e1); border-top: 1px solid #9bd4e1;}
+RankingBadge#MASTER { background: qradialgradient(cx: 0.8, cy: 0.1, radius: 1, fx: 0.5, fy: 0.5, stop: 0 #fa71cd, stop: 0.4 #b256e8, stop: 0.5 #c471f5, stop: 0.6 #b256e8, stop: 1 #c471f5); border-top: 1px solid #a15dc9;}
+RankingBadge#GRANDMASTER { background: qradialgradient(cx: 0.8, cy: 0.1, radius: 1, fx: 0.5, fy: 0.5, stop: 0 #b54e4e, stop: 0.4 #db7f7f, stop: 0.5 #d3d3d3, stop: 0.6 #cf2525, stop: 1 #8f8989); border-top: 1px solid #5e5010;}
+    

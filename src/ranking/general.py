@@ -2,9 +2,9 @@
 '''
 Project : GamBible
 Package: Ranking
-Module:  ELO
+Module:  general
 Version: 2.0
-Usage: Provides general functionalities for ranking algorithms, such as sorting by criteria and graph display
+Usage: Provides general functionalities for ranking algorithms, such as sorting by criteria and graph display.
 
 Author: BoxBoxJason
 Date: 20/11/2023
@@ -14,15 +14,13 @@ from matplotlib.pyplot import savefig,figure,show,Normalize
 
 def orderGamesTable(games_table):
     """
-    @brief Orders the games table by dates and returns them
+    Orders the games table by dates and returns them as a list.
 
-    @param (dict) games_table : Database games table
+    :param dict games_table: Database Games table.
 
-    @return (dict[]) games list ordered by date
+    :return: list[dict] - Games dictionaries list ordered by date.
     """
-    games_table_list = []
-    for game_dict in games_table.values():
-        games_table_list.append(game_dict)
+    games_table_list = list(games_table.values())
 
     games_table_list.sort(key = lambda x : x['DATE'])
     for i,game_dict in enumerate(games_table_list):
@@ -33,23 +31,25 @@ def orderGamesTable(games_table):
 
 def orderConfigurationsTable(configurations_table):
     """
-    @brief Orders the configurations table by success rate and returns them
+    Orders the configurations table by success rate and returns them.
 
-    @param (dict) configurations_table : Database configuration table
+    :param dict configurations_table: Database configurations table.
 
-    @return (dict[]) configurations list ordered by success rate
+    :return: list[dict] - Configurations list ordered by success rate.
     """
-    configurations_table_list = []
-    for configuration_dict in configurations_table.values():
-        configurations_table_list.append(configuration_dict)
-
+    configurations_table_list = list(configurations_table.values())
     configurations_table_list.sort(key=lambda x: x['SUCCESS_RATE'])
 
     return configurations_table_list
 
+
 def plotSuccessRate(config_table,X_key,Y_key):
     """
+    Plots a 3D heatmap of success rates by parameters values.
 
+    :param dict config_table: Database configurations table.
+    :param str x_key: Config table x axis key.
+    :param str y_key: Config table y axis key.
     """
     X_ticks_list = []
     Y_ticks_list = []
@@ -66,6 +66,6 @@ def plotSuccessRate(config_table,X_key,Y_key):
     ax.set_xlabel(X_key)
     ax.set_ylabel(Y_key)
     ax.set_zlabel('SUCCES RATE')
-    ax.set_title('Success rate heatmap')
+    ax.set_title('Success Rate Heatmap')
     savefig('heatmap.png')
     show()

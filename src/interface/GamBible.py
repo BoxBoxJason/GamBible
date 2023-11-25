@@ -24,21 +24,12 @@ from interface.games.PlayersRanking import PlayersRankingWidget
 
 class GamBible(QMainWindow):
     """
-    GamBible main window
-    
-    GRIDLAYOUT:
-                TITLE
-              SUBTITLE
-              
-              MESSAGE
-              
-        P1 WIDGET    P2 WIDGET
-        
-        GAME INFORMATION WIDGET
-        
-                SUBMIT
+    GamBible main window. Contains the app MainWidget that manages all app functionalities and the toolbar for app navigation.
     """
     def __init__(self):
+        """
+        Constructor for GamBible.
+        """
         logging.debug('Setting up Collector main window')
         super().__init__()
         self.setContentsMargins(0,0,0,0)
@@ -55,62 +46,66 @@ class GamBible(QMainWindow):
 
 class MainWidget(QWidget):
     """
-    GamBible main widget
-    Contains all displayable windows
+    GamBible main widget. Hosts and operates all functionalities.
+    Contains all displayable windows and orchestrates them.
+
+    :cvar dict __INDEXBYEVENT: Contains the index of the corresponding window depending on the event.
+    :cvar dict __DBNAMEBYEVENT: Contains the database default file names for each event.
     """
 
     __INDEXBYEVENT = {"welcome":0,"settings":1,"1v1 game":2,"free for all game":3,"team game":4,"ranking":5}
     __DBNAMEBYEVENT = {"1v1 game":"defaultELO.json","free for all game":"defaultMMR-FFA.json","team game":"defaultMMR-Team.json"}
 
     def __init__(self,parent):
+        """
+        Constructor for MainWidget.
+
+        :param QWidget parent: Parent widget.
+        """
         super().__init__(parent)
-        layout = QVBoxLayout()
 
-        self.__stacked_layout = QStackedLayout()
-        self.__stacked_layout.addWidget(WelcomePage(self))
-        self.__stacked_layout.addWidget(SettingsWidget(self))
-        self.__stacked_layout.addWidget(OneVOneWidget(self))
-        self.__stacked_layout.addWidget(FreeForAllWidget(self))
-        self.__stacked_layout.addWidget(TeamWidget(self))
-        self.__stacked_layout.addWidget(PlayersRankingWidget(self))
-
-        layout.addLayout(self.__stacked_layout,1)
-        self.setLayout(layout)
+        stacked_layout = QStackedLayout(self)
+        stacked_layout.addWidget(WelcomePage(self))
+        stacked_layout.addWidget(SettingsWidget(self))
+        stacked_layout.addWidget(OneVOneWidget(self))
+        stacked_layout.addWidget(FreeForAllWidget(self))
+        stacked_layout.addWidget(TeamWidget(self))
+        stacked_layout.addWidget(PlayersRankingWidget(self))
 
 
     def switchSelection(self,sport,category,event):
         """
-        Changes displayed page and updates with corresponding players database
+        Changes displayed page and updates with corresponding players database.
 
-        @param (str) sport : Selected sport
-        @param (str) category : Selected category
-        @param (str) event : Selected event
+        :param str sport: Selected sport name.
+        :param str category: Selected category name.
+        :param str event: Selected event name.
         """
         config_dict = getConfig()
         db_name = MainWidget.__DBNAMEBYEVENT.get(event,config_dict['TOOLBAR'][sport]['database'])
 
-        self.__stacked_layout.widget(MainWidget.__INDEXBYEVENT[event]).clean()
-        self.__stacked_layout.widget(MainWidget.__INDEXBYEVENT[event]).setTitle(sport.capitalize())
-        self.__stacked_layout.widget(MainWidget.__INDEXBYEVENT[event]).setSubtitle(f"{category.capitalize()} {event}")
-        self.__stacked_layout.widget(MainWidget.__INDEXBYEVENT[event]).setDatabase(getDBPath(sport,category,db_name))
-        self.__stacked_layout.setCurrentIndex(MainWidget.__INDEXBYEVENT[event])
+        self.layout().widget(MainWidget.__INDEXBYEVENT[event]).clean()
+        self.layout().widget(MainWidget.__INDEXBYEVENT[event]).setTitle(sport.capitalize())
+        self.layout().widget(MainWidget.__INDEXBYEVENT[event]).setSubtitle(f"{category.capitalize()} {event}")
+        self.layout().widget(MainWidget.__INDEXBYEVENT[event]).setDatabase(getDBPath(sport,category,db_name))
+        self.layout().setCurrentIndex(MainWidget.__INDEXBYEVENT[event])
 
 
     def clean(self,index=None):
         """
-        Cleans the requested widget
+        Cleans the requested widget, if no widget is requested, cleans currently displayed widget.
 
-        @param (int) index : Index of the widget to clean
+        :param int index: Index of the widget to clean.
         """
         if index is not None:
-            self.__stacked_layout.currentWidget().clean()
+            self.layout().currentWidget().clean()
         else:
-            self.__stacked_layout.widget(index).clean()
+            self.layout().widget(index).clean()
 
 
 def addFonts():
     """
-    Adds all available fonts to QFontDatabase
+    Adds all available fonts to QFontDatabase.
     """
     for font_path in getFontsPaths():
         QFontDatabase.addApplicationFont(font_path)
