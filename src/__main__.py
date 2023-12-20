@@ -22,6 +22,8 @@ environ['GAMBIBLE'] = root_dir_path
 
 from resources.PathEnum import getStyleSheet
 from interface.GamBible import GamBible,addFonts
+from ranking.ELO import optimizeHyperparametersBayesian
+
 
 ##----------Logging setup----------##
 logging.basicConfig(
@@ -32,6 +34,9 @@ logging.basicConfig(
         logging.StreamHandler(sys.stdout)
     ]
 )
+
+optimizeHyperparametersBayesian('Tennis','Men')
+exit()
 
 logging.info('Starting GamBible V2.0')
 

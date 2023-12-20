@@ -58,7 +58,7 @@ class FreeForAllWidget(TemplatePageWidget):
         """
         database = getJsonObject(database_path)
         self.players_table = database['PLAYERS']
-        processGames(database_path,database['GAMES'],self.players_table,commit=True)
+        print(processGames(database_path,database['GAMES'],self.players_table,20,1,1,True))
         self.__ranking_widget.updatePlayersList(self.players_table)
         dumpJsonObject(database,database_path)
 

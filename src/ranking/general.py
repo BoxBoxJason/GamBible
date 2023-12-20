@@ -14,7 +14,7 @@ from matplotlib.pyplot import savefig,figure,show,Normalize
 
 def orderGamesTable(games_table):
     """
-    Orders the games table by dates and returns them as a list.
+    Orders the Games table by dates and returns an ordered list of Games ids.
 
     :param dict games_table: Database Games table.
 
@@ -23,10 +23,8 @@ def orderGamesTable(games_table):
     games_table_list = list(games_table.values())
 
     games_table_list.sort(key = lambda x : x['DATE'])
-    for i,game_dict in enumerate(games_table_list):
-        games_table_list[i] = game_dict['ID']
 
-    return games_table_list
+    return [game_dict['ID'] for game_dict in games_table_list]
 
 
 def orderConfigurationsTable(configurations_table):

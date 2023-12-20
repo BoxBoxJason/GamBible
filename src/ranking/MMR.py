@@ -12,9 +12,9 @@ Date: 13/10/2023
 from math import tanh,pi,sqrt
 from copy import copy
 import logging
-from json import dump,load
-from resources.utils import findZero
-from resources.PathEnum import getDBPath
+from optuna import create_study,load_study
+from resources.utils import findZeroBisection
+from resources.PathEnum import getDBPath,getJsonObject,dumpJsonObject
 from ranking.general import orderGamesTable
 
 # Player default skill value
@@ -22,7 +22,7 @@ START_SKILL = 1500
 # Player default skill deviation (skill uncertainty)
 START_DEVIATION = 350
 
-def processGames(output_file_path,games_table,players_table,γ=0.5,β=0.5,ρ=1,commit=False):
+def processGames(output_file_path,games_table,players_table,γ=START_DEVIATION,β=0.5,ρ=1,commit=False,games_ordered_ids=None):
     """
     Processes the entire history file and updates players dict with new games informations.
     
@@ -37,22 +37,24 @@ def processGames(output_file_path,games_table,players_table,γ=0.5,β=0.5,ρ=1,c
     :return: float - MMR algorithm prediction success rate
     """
     logging.info('Processing new games')
-    games_ordered_ids = orderGamesTable(games_table)
+    if games_ordered_ids is None:
+        games_ordered_ids = orderGamesTable(games_table)
 
     total_processed_games = 0
     predicted_output = 0
     for game_id in games_ordered_ids:
         if not games_table[game_id]['PROCESSED']:
-            total_processed_games += 1
             predicted_output += processGame(players_table,games_table[game_id],γ,β,ρ)
+            total_processed_games += 1
 
     if commit:
-        with open(output_file_path,'w',encoding='utf-8') as output_file:
-            dump({'GAMES':games_table,'PLAYERS':players_table},output_file)
+        dumpJsonObject({'GAMES':games_table,'PLAYERS':players_table},output_file_path)
 
     success_rate = 0
     if total_processed_games != 0:
         success_rate = predicted_output / total_processed_games
+
+    logging.debug(f"Processed {total_processed_games} new games")
     return success_rate
 
 
@@ -107,7 +109,7 @@ def diffuse(player_dict,γ,ρ):
 
     for i in range(len(player_dict['PERF_WEIGHT'])):
         player_dict['PERF_WEIGHT'][i] *= ϰ ** (1 + ρ)
-    player_dict['SKILL_DEVIATION'] /= sqrt(ϰ)
+    player_dict['SKILL_DEVIATION'] *= sqrt(ϰ)
 
 
 def update(players_ranking,selected_player_index,β):
@@ -143,7 +145,7 @@ def getAverageSkillEstimation(player_dict,β):
 
         return val
 
-    return findZero(estimationFunction)
+    return findZeroBisection(estimationFunction)
 
 
 def getPerfEstimation(players_ranking,selected_player_index):
@@ -165,7 +167,7 @@ def getPerfEstimation(players_ranking,selected_player_index):
 
         return val
 
-    return findZero(estimationFunction)
+    return findZeroBisection(estimationFunction)
 
 
 def createGame(games_table,players_table,game_id,game_date,game_ranking):
@@ -189,40 +191,27 @@ def createGame(games_table,players_table,game_id,game_date,game_ranking):
         players_table[player_id]['GAMES'].append(game_id)
 
 
-def optimizeHyperparameters(sport,category):
-    """
-    Hyperparemeter optimization algorithm, tests a large number of configurations and logs the succes rate into database.
+def optimizeHyperparametersBayesian(sport,category):
+    db_path = getDBPath(sport,category,'defaultMMR-FFA.json')
+    games_ordered_ids = orderGamesTable(getJsonObject(db_path)['GAMES'])
 
-    :param str sport: Sport name (must correspond to existing folder).
-    :param str category: Category name (must correspond to existing folder).
-    """
-    logging.info('Starting MMR algorithm hyperparameters optimization')
+    def objective(trial):
+        γ = trial.suggest_float('γ',1e-6,50)
+        β = trial.suggest_float('β',1e-6,50)
+        ρ = trial.suggest_float('ρ',1e-6,10000)
+        gambible_db = getJsonObject(db_path)
+        success_rate = processGames(db_path,gambible_db['GAMES'],gambible_db['PLAYERS'],γ,β,ρ,False,games_ordered_ids)
 
-    config_path = getDBPath(sport,category,'configurationMMR.json')
-    with open(config_path,'r',encoding='utf-8') as config_file:
-        configurations_table = load(config_file)
+        return success_rate
 
-    γ_range = [1]
-    β_range = [0.001]
-    ρ_range = [10000]
+    study_name = f"{sport} MMR-{category} configuration"
+    configuration_db_path = f"sqlite:///{getDBPath(sport,category,'configurationMMR.db',False)}"
 
-    for γ in γ_range:
-        for β in β_range:
-            for ρ in ρ_range:
-                config_id = f"{γ}-{β}-{ρ}"
-                if not config_id in configurations_table:
+    try:
+        study = load_study(study_name=study_name,storage=configuration_db_path)
+    except:
+        study = create_study(direction='maximize',study_name=study_name,storage=configuration_db_path)
 
-                    db_path = getDBPath(sport,category,'defaultMMR.json')
-                    with open(db_path,'r',encoding='utf-8') as input_file:
-                        gambible_db = load(input_file)
-                    success_rate = processGames(db_path,gambible_db['GAMES'],gambible_db['PLAYERS'],γ,β,ρ)
+    print(study.best_params,study.best_value)
 
-                    configurations_table[config_id] = {
-                        'TEMPORAL_DIFFUSION':γ,
-                        'PERFORMANCE_DEVIATION':β,
-                        'INVERSE_MOMENTUM':ρ,
-                        'SUCCESS_RATE':success_rate
-                    }
-                    logging.debug(f"Success rate={success_rate} for TEMPORAL_DIFFUSION={γ}, PERFORMANCE_DEVIATION={β}, INVERSE_MOMENTUM={ρ}")
-                    with open(config_path,'w',encoding='utf-8') as config_output:
-                        dump(configurations_table,config_output)
+    study.optimize(objective,n_trials=1000)

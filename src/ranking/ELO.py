@@ -10,14 +10,13 @@ Author: BoxBoxJason
 Date: 01/10/2023
 '''
 import logging
-from json import load,dump
-from numpy import linspace
-from resources.PathEnum import getDBPath
+from optuna import load_study,create_study
+from resources.PathEnum import getDBPath,getJsonObject,dumpJsonObject
 from ranking.general import orderGamesTable
 
 START_ELO = 1500
 
-def processGames(output_file_path,games_table,players_table,base_points,beginner_multiplier,low_elo_multiplier,commit=False):
+def processGames(output_file_path,games_table,players_table,base_points,beginner_multiplier,low_elo_multiplier,commit=False,games_ordered_ids=None):
     """
     Process all unprocessed games in the database.
 
@@ -34,7 +33,8 @@ def processGames(output_file_path,games_table,players_table,base_points,beginner
 
     total_number_games = 0
     correct_predictions = 0
-    games_ordered_ids = orderGamesTable(games_table)
+    if games_ordered_ids is None:
+        games_ordered_ids = orderGamesTable(games_table)
 
     for game_id in games_ordered_ids:
         game_dict = games_table[game_id]
@@ -43,8 +43,7 @@ def processGames(output_file_path,games_table,players_table,base_points,beginner
             correct_predictions += processGame(game_dict,players_table,base_points,beginner_multiplier,low_elo_multiplier)
 
     if commit:
-        with open(output_file_path,'w',encoding='utf-8') as db_file:
-            dump({'GAMES':games_table,'PLAYERS':players_table},db_file)
+        dumpJsonObject({'GAMES':games_table,'PLAYERS':players_table},output_file_path)
 
     success_rate = 0
     if total_number_games != 0:
@@ -136,7 +135,7 @@ def getPlayerGrowthCoeff(player_games_count,base_points,beginner_multiplier,low_
     return K
 
 
-def optimizeGrowthCoeff(sport,category):
+def optimizeHyperparametersBayesian(sport,category):
     """
     Hyperparemeter optimization algorithm, tests a large number of configurations and logs the succes rate into database.
 
@@ -145,31 +144,25 @@ def optimizeGrowthCoeff(sport,category):
     """
     logging.info('Starting ELO algorithm hyperparameter optimization')
 
-    config_path = getDBPath(sport,category,'configurationELO.json')
-    with open(config_path,'r',encoding='utf-8') as config_file:
-        configurations_table = load(config_file)
+    db_path = getDBPath(sport,category,'defaultELO.json')
+    games_ordered_ids = orderGamesTable(getJsonObject(db_path)['GAMES'])
 
-    base_points_range = linspace(30,40)
-    beginner_multiplier_range = linspace(0.1,10)
-    #low_elo_multiplier_range = linspace(1,10)
-    low_elo_multiplier = 1
+    def objective(trial):
+        base_points = trial.suggest_float('BASE_POINTS',1e-6,50)
+        beginner_multiplier = trial.suggest_float('BEGINNER_MULTIPLIER',1e-6,15)
+        low_elo_multiplier = trial.suggest_float('LOW_ELO_MULTIPLIER',1e-6,4)
+        gambible_db = getJsonObject(db_path)
+        success_rate = processGames(db_path,gambible_db['GAMES'],gambible_db['PLAYERS'],
+                                    base_points,beginner_multiplier,low_elo_multiplier,False,games_ordered_ids)
 
-    for base_points in base_points_range:
-        for beginner_multiplier in beginner_multiplier_range:
-            config_id = f"{base_points}-{beginner_multiplier}-{low_elo_multiplier}"
-            if not config_id in configurations_table:
+        return success_rate
 
-                db_path = getDBPath(sport,category,'defaultELO.json')
-                with open(db_path,'r',encoding='utf-8') as input_file:
-                    gambible_db = load(input_file)
-                success_rate = processGames(db_path,gambible_db['GAMES'],gambible_db['PLAYERS'],base_points,beginner_multiplier,low_elo_multiplier)
-                
-                configurations_table[config_id] = {
-                    'BASE_POINTS':base_points,
-                    'BEGINNER_MULTIPLIER':beginner_multiplier,
-                    'LOW_ELO_MULTIPLIER':low_elo_multiplier,
-                    'SUCCESS_RATE':success_rate
-                }
-                logging.debug(f"Success rate={success_rate} for base_points={base_points}, beginner_multiplier={beginner_multiplier}, low_elo_multiplier={low_elo_multiplier}")
-                with open(config_path,'w',encoding='utf-8') as config_output:
-                    dump(configurations_table,config_output)
+    study_name = f"{sport} MMR-{category} configuration"
+    configuration_db_path = f"sqlite:///{getDBPath(sport,category,'configurationELO.db',False)}"
+
+    try:
+        study = load_study(study_name=study_name,storage=configuration_db_path)
+    except:
+        study = create_study(direction='maximize',study_name=study_name,storage=configuration_db_path)
+
+    study.optimize(objective,n_trials=1000)

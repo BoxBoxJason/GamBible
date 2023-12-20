@@ -38,9 +38,9 @@ def getRankFromELO(ELO):
     return rank
 
 
-def findZero(f):
+def findZeroBisection(f):
     """
-    Implementation of the dichotomy algorithm, searches from values from 0 to 10000.
+    Implementation of the bisection algorithm, searches from values from 0 to 10000.
 
     :param function f: R -> R function to evaluate.
 

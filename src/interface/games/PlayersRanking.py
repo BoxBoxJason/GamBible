@@ -10,7 +10,6 @@ Author: BoxBoxJason
 Date: 09/10/2023
 '''
 import logging
-from json import load
 from PyQt6.QtWidgets import QWidget,QScrollArea, QVBoxLayout, QHBoxLayout,\
     QLabel, QLineEdit
 from PyQt6.QtCore import Qt
@@ -81,9 +80,13 @@ class PlayersRankingWidget(TemplatePageWidget):
 
         :param path database_path: Absolute path to database file.
         """
-        self.__players_table = getJsonObject(database_path)['PLAYERS']
-
-        sorted_players = sorted(self.__players_table.values(),key=lambda x: x['ELO'],reverse=True)
+        database = getJsonObject(database_path)
+        self.__players_table = database['PLAYERS']
+        test_row = self.__players_table.popitem()
+        if 'ELO' in test_row[1]:
+            sorted_players = sorted(self.__players_table.values(),key=lambda x: x['ELO'],reverse=True)
+        else:
+            sorted_players = sorted(self.__players_table.values(),key=lambda x: x['SKILL'] - 3 * x['SKILL_DEVIATION'],reverse=True)
 
         logging.debug('Creating ranking badges')
         for index,player_dict in enumerate(sorted_players):
@@ -133,18 +136,19 @@ class RankingBadge(QWidget):
         layout.addWidget(player_label,1,Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop)
 
         # Tier label
-        division = getRankFromELO(player_dict.get('ELO'))
+        elo = player_dict.get('ELO')
+        if elo is None:
+            elo = player_dict.get('SKILL',0) - 3 * player_dict.get('SKILL_DEVIATION',0)
+        division = getRankFromELO(elo)
         self.setObjectName(division)
         tier_label = QLabel(division,self)
         tier_label.setFixedSize(100,22)
         layout.addWidget(tier_label,1,Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop)
 
         # ELO label
-        elotxt = player_dict.get('ELO')
-        if elotxt is None:
-            elotxt = player_dict.get('SKILL',0) - 3 * player_dict.get('SKILL_DEVIATION',0)
-        if not isinstance(elotxt,str):
-            elotxt = "{:.2f}".format(elotxt)
+        elotxt = elo
+        if not isinstance(elo,str):
+            elotxt = "{:.2f}".format(elo)
         elo_label = QLabel(elotxt,self)
         elo_label.setFixedSize(55,22)
         layout.addWidget(elo_label,1,Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop)

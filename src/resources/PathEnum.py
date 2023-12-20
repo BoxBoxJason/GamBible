@@ -41,7 +41,7 @@ def getImage(image_name):
     """
     return os.path.join(PathEnum.IMAGES,image_name)
 
-def getDBPath(sport,category,db_name):
+def getDBPath(sport,category,db_name,create=True):
     """
     Returns absolute database path for requested sport, category and file name.
     If the path does not exist, it will be created.
@@ -55,7 +55,7 @@ def getDBPath(sport,category,db_name):
     """
     db_path = os.path.join(PathEnum.RESULTS,sport,category,db_name)
     os.makedirs(os.path.dirname(db_path),777,True)
-    if not os.path.exists(db_path):
+    if not os.path.exists(db_path) and create:
         dumpJsonObject({'GAMES':{},'PLAYERS':{}},db_path)
     return db_path
 
